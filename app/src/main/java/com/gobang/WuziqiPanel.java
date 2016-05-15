@@ -6,11 +6,14 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Point;
+import android.os.Bundle;
+import android.os.Parcelable;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Toast;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,8 +35,8 @@ public class WuziqiPanel extends View{
 
     //白棋先手，当前轮到白棋
     private boolean mIsWhite = true;
-    private List<Point> mWhiteArray = new ArrayList<>();
-    private List<Point> mBlackArray = new ArrayList<>();
+    private ArrayList<Point> mWhiteArray = new ArrayList<>();
+    private ArrayList<Point> mBlackArray = new ArrayList<>();
 
     private boolean mIsGameover;
     private boolean mIsWhiteWinner;
@@ -41,7 +44,7 @@ public class WuziqiPanel extends View{
     public WuziqiPanel(Context context, AttributeSet attrs) {
 
         super(context, attrs);
-        setBackgroundColor(0x44ff0000);
+        //setBackgroundColor(0x44ff0000);
         init();
     }
 
@@ -329,5 +332,45 @@ public class WuziqiPanel extends View{
             canvas.drawLine(startX,y,endX,y,mPaint);
             canvas.drawLine(y,startX,y,endX,mPaint);
         }
+    }
+
+    public void reStart()
+    {
+        mWhiteArray.clear();
+        mBlackArray.clear();
+        mIsGameover = false;
+        mIsWhiteWinner = false;
+        invalidate();
+    }
+    private static final String INSTANCE = "instance";
+    private static final String INSTANCE_GAME_OVER = "instance_game_over";
+    private static final String INSTANCE_WHITE_ARRAY = "instance_white_array";
+    private static final String INSTANCE_BLACK_ARRAY = "instance_black_array";
+
+    @Override
+    protected Parcelable onSaveInstanceState()
+    {
+        Bundle bundle = new Bundle();
+        bundle.putParcelable(INSTANCE,super.onSaveInstanceState());
+        bundle.putBoolean(INSTANCE_GAME_OVER,mIsGameover);
+        bundle.putParcelableArrayList(INSTANCE_WHITE_ARRAY,mWhiteArray);
+        bundle.putParcelableArrayList(INSTANCE_BLACK_ARRAY,mBlackArray);
+        return bundle;
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Parcelable state)
+    {
+        if(state instanceof Bundle)
+        {
+            Bundle bundle = (Bundle) state;
+            mIsGameover = bundle.getBoolean(INSTANCE_GAME_OVER);
+            mWhiteArray = bundle.getParcelableArrayList(INSTANCE_WHITE_ARRAY);
+            mWhiteArray = bundle.getParcelableArrayList(INSTANCE_BLACK_ARRAY);
+            super.onRestoreInstanceState(bundle.getParcelable(INSTANCE));
+
+            return ;
+        }
+        super.onRestoreInstanceState(state);
     }
 }
