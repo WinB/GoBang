@@ -9,6 +9,7 @@ import android.graphics.Point;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,6 +20,7 @@ public class WuziqiPanel extends View{
     private int mPanelWidth;
     private float mLineHeight;
     private int MAX_LINE=10;
+    private int MAX_COUNT_IN_LINE = 5;
 
     private Paint mPaint = new Paint();
 
@@ -32,6 +34,9 @@ public class WuziqiPanel extends View{
     private boolean mIsWhite = true;
     private List<Point> mWhiteArray = new ArrayList<>();
     private List<Point> mBlackArray = new ArrayList<>();
+
+    private boolean mIsGameover;
+    private boolean mIsWhiteWinner;
 
     public WuziqiPanel(Context context, AttributeSet attrs) {
 
@@ -87,6 +92,7 @@ public class WuziqiPanel extends View{
     @Override
     public boolean onTouchEvent(MotionEvent event)
     {
+        if (mIsGameover) return false;
         int action = event.getAction();
         if(action == MotionEvent.ACTION_UP)
         {
@@ -123,6 +129,174 @@ public class WuziqiPanel extends View{
 
         drawBoard(canvas);
         drawPiece(canvas);
+
+        checkGameover();
+    }
+
+    private void checkGameover() {
+        boolean whiteWin = checkFiveInLine(mWhiteArray);
+        boolean blackWin = checkFiveInLine(mBlackArray);
+
+        if(whiteWin || blackWin)
+        {
+            mIsGameover = true;
+            mIsWhiteWinner = whiteWin;
+
+            String text = mIsWhiteWinner?"白棋胜利":"黑棋胜利";
+            Toast.makeText(getContext(),text,Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private boolean checkFiveInLine(List<Point> points) {
+        for(Point p : points)
+        {
+            int x = p.x;
+            int y = p.y;
+
+            boolean win = checkHorizontal(x,y,points);
+            if(win)return true;
+            win = checkVertical(x,y,points);
+            if(win)return true;
+            win = checkLeftDiagonal(x,y,points);
+            if(win)return true;
+            win = checkRightDiagonal(x,y,points);
+
+        }
+        return false;
+    }
+
+    //判断想x,y位置的棋子，释放横向有相邻的五个一致
+    private boolean checkHorizontal(int x, int y, List<Point> points)
+    {
+        int count = 1;
+        //左
+        for(int i =1;i<MAX_COUNT_IN_LINE;i++)
+        {
+            if(points.contains(new Point(x - i,y)))
+            {
+                count++;
+            }else
+            {
+                break;
+            }
+
+        }
+        //左边要是有五个了，直接判断一次，不用判断右边
+        if(count == MAX_COUNT_IN_LINE) return true;
+        //右边
+        for(int i =1;i<MAX_COUNT_IN_LINE;i++)
+        {
+            if(points.contains(new Point(x + i,y)))
+            {
+                count++;
+            }else
+            {
+                break;
+            }
+
+        }
+        if(count == MAX_COUNT_IN_LINE) return true;
+        return false;
+    }
+    //判断想x,y位置的棋子，释放纵向有相邻的五个一致
+    private boolean checkVertical(int x, int y, List<Point> points)
+    {
+        int count = 1;
+        //上
+        for(int i =1;i<MAX_COUNT_IN_LINE;i++)
+        {
+            if(points.contains(new Point(x,y-i)))
+            {
+                count++;
+            }else
+            {
+                break;
+            }
+
+        }
+        //上边要是有五个了，直接判断一次，不用判断右边
+        if(count == MAX_COUNT_IN_LINE) return true;
+        //下边
+        for(int i =1;i<MAX_COUNT_IN_LINE;i++)
+        {
+            if(points.contains(new Point(x,y+i)))
+            {
+                count++;
+            }else
+            {
+                break;
+            }
+
+        }
+        if(count == MAX_COUNT_IN_LINE) return true;
+        return false;
+    }
+
+    //判断想x,y位置的棋子，释放左斜向有相邻的五个一致
+    private boolean checkLeftDiagonal(int x, int y, List<Point> points)
+    {
+        int count = 1;
+        //左斜上边
+        for(int i =1;i<MAX_COUNT_IN_LINE;i++)
+        {
+            if(points.contains(new Point(x-i,y+i)))
+            {
+                count++;
+            }else
+            {
+                break;
+            }
+
+        }
+        //上边要是有五个了，直接判断一次，不用判断右边
+        if(count == MAX_COUNT_IN_LINE) return true;
+        //左斜下边
+        for(int i =1;i<MAX_COUNT_IN_LINE;i++)
+        {
+            if(points.contains(new Point(x+i,y-i)))
+            {
+                count++;
+            }else
+            {
+                break;
+            }
+
+        }
+        if(count == MAX_COUNT_IN_LINE) return true;
+        return false;
+    }
+    //判断想x,y位置的棋子，释放右斜向有相邻的五个一致
+    private boolean checkRightDiagonal(int x, int y, List<Point> points)
+    {
+        int count = 1;
+        //右斜上边
+        for(int i =1;i<MAX_COUNT_IN_LINE;i++)
+        {
+            if(points.contains(new Point(x-i,y-i)))
+            {
+                count++;
+            }else
+            {
+                break;
+            }
+
+        }
+        //上边要是有五个了，直接判断一次，不用判断右边
+        if(count == MAX_COUNT_IN_LINE) return true;
+        //右斜下边
+        for(int i =1;i<MAX_COUNT_IN_LINE;i++)
+        {
+            if(points.contains(new Point(x+i,y+i)))
+            {
+                count++;
+            }else
+            {
+                break;
+            }
+
+        }
+        if(count == MAX_COUNT_IN_LINE) return true;
+        return false;
     }
 
     private void drawPiece(Canvas canvas) {
